@@ -86,3 +86,23 @@ INSERT INTO t04_medico_especialidad values(2, 3);
 INSERT INTO t04_medico_especialidad values(2, 4);
 INSERT INTO t04_medico_especialidad values(3, 4);
 INSERT INTO t04_medico_especialidad values(4, 4);
+
+-- Creacion tabla temporal
+
+CREATE TABLE t04_temporal(
+    medico_cedula  VARCHAR2(11) NOT NULL,
+    medico_nombre VARCHAR2(40) NOT NULL,
+    medico_apellido VARCHAR2(40) NOT NULL,
+    medico_provincia VARCHAR2(15) NOT NULL,
+    especialidades VARCHAR2(200) NOT NULL,
+    hospitales VARCHAR2(40) NOT NULL
+);
+
+INSERT INTO t04_temporal values('3-0098-8768', 'Marta', 'Morales', 'Cartago',
+ 'Alergologo, Pediatra, Nutricionista, Odontologo', 'Hospital Max Peralta');
+INSERT INTO t04_temporal values('2-0876-4527', 'Flor', 'Flores', 'Heredia',
+ 'Nutricionista, Cardiologa, Medico General', 'Hospital San Vicente de Paul');
+INSERT INTO t04_temporal values('1-9976-0442', 'Kevin', 'Moraga', 'Alajuela',
+ 'Cardiologo, Pediatra, Hepatologo', 'Hospital San Rafael');
+ 
+Select * FROM t04_temporal;
