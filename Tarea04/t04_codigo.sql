@@ -59,3 +59,30 @@ ADD ( CONSTRAINT fk_tr04_medico2 FOREIGN KEY (medico_id)
     , CONSTRAINT fk_tr04_hospital FOREIGN KEY (hospital_id)
       REFERENCES t04_hospital(id_hospital)
     );
+
+-- datos de prueba
+
+INSERT INTO t04_hospital values (1, 'Hospital Max peralta', 'Cartago');
+INSERT INTO t04_hospital values (2, 'Hospital San Rafael', 'Alajuela');
+INSERT INTO t04_hospital values (3, 'Hospital San Vicente de Paul', 'Heredia');
+
+INSERT INTO t04_medico values (1, '4-0071-0076', 'Gloria', 'Morales', 'Alajuela');
+INSERT INTO t04_medico values (2, '1-0651-0656', 'Andrea', 'Porras', 'Heredia');
+INSERT INTO t04_medico values (3, '4-9876-6535', 'Aurelio', 'Sanabria', 'Alajuela');
+INSERT INTO t04_medico values (4, '3-7879-8765', 'Jaime', 'Vargas', 'Cartago');
+
+INSERT INTO t04_especialidad values(1, 'Cardiologo');
+INSERT INTO t04_especialidad values(2, 'Alergologo');
+INSERT INTO t04_especialidad values(3, 'Pediatra');
+INSERT INTO t04_especialidad values(4, 'Nutricionista');
+
+INSERT INTO t04_medico_hospital values(1, 2);
+INSERT INTO t04_medico_hospital values(1, 3);
+INSERT INTO t04_medico_hospital values(4, 3);
+
+INSERT INTO t04_medico_especialidad values(1, 1);
+INSERT INTO t04_medico_especialidad values(1, 2);
+INSERT INTO t04_medico_especialidad values(2, 3);
+INSERT INTO t04_medico_especialidad values(2, 4);
+INSERT INTO t04_medico_especialidad values(3, 4);
+INSERT INTO t04_medico_especialidad values(4, 4);
