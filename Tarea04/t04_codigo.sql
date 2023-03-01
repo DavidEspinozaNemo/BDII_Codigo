@@ -99,7 +99,7 @@ CREATE TABLE t04_temporal(
 );
 
 INSERT INTO t04_temporal values('3-0098-8768', 'Marta', 'Morales', 'Cartago',
- 'Alergologo, Pediatra, Nutricionista, Odontologo', 'Hospital Max Peralta');
+ 'Alergologo, Pediatra, Nutricionista, Odontologo', 'Hospital Max peralta');
 INSERT INTO t04_temporal values('2-0876-4527', 'Flor', 'Flores', 'Heredia',
  'Nutricionista, Cardiologa, Medico General', 'Hospital San Vicente de Paul');
 INSERT INTO t04_temporal values('1-9976-0442', 'Kevin', 'Moraga', 'Alajuela',
@@ -144,8 +144,65 @@ BEGIN
 END;
 /
 
-Select calcular_siguiente_id_medico() FROM dual;
+-- funcion para preguntar si un hospital existe
+-- retorna la cantidad de hospitales con el nombre, si existe debe ser 1, sino 0
+CREATE OR REPLACE FUNCTION existe_hospital( nom_hosp VARCHAR2 )
+    RETURN NUMBER IS
+    v_numero_hospitales NUMBER;
+BEGIN
+    SELECT count(t04_hospital.id_hospital) INTO v_numero_hospitales
+    FROM t04_hospital
+    WHERE t04_hospital.nombre_hospital = nom_hosp;
+    
+    RETURN v_numero_hospitales;
+END;
+/
 
+-- procedimiento para enlazar medico con el hospital
+CREATE OR REPLACE PROCEDURE p_conectar_medico_hospital(
+    p_cedula_medico VARCHAR2,
+    p_nombre_hospital VARCHAR2 )
+IS
+    v_id_medico NUMBER;
+    v_id_hospital NUMBER;
+BEGIN
+    SELECT t04_medico.id_medico INTO v_id_medico
+    FROM t04_medico
+    WHERE t04_medico.cedula_medico = p_cedula_medico;
+    
+    SELECT t04_hospital.id_hospital INTO v_id_hospital
+    FROM t04_hospital
+    WHERE t04_hospital.nombre_hospital = p_nombre_hospital;
+    
+    DBMS_OUTPUT.PUT_LINE(v_id_medico || ' ,' || v_id_hospital);
+END;
+/
+
+-- procedimiento para enlazar medico con especialidad
+CREATE OR REPLACE PROCEDURE p_conectar_medico_especialidad(
+    p_cedula_medico VARCHAR2,
+    p_nombre_espec VARCHAR2 )
+IS
+    v_id_medico NUMBER;
+    v_id_espec NUMBER;
+BEGIN
+    SELECT t04_medico.id_medico INTO v_id_medico
+    FROM t04_medico
+    WHERE t04_medico.cedula_medico = p_cedula_medico;
+    
+    SELECT t04_especialidad.id_especialidad INTO v_id_espec
+    FROM t04_especialidad
+    WHERE t04_especialidad.nombre_espec = p_nombre_espec;
+    
+    DBMS_OUTPUT.PUT_LINE(v_id_medico || ' ,' || v_id_espec);
+END;
+/
+
+Select calcular_siguiente_id_medico() FROM dual;
+Select existe_hospital('Hospital Max peralta') FROM dual;
+Select existe_hospital('Hospital San Patricio') FROM dual;
+Exec p_conectar_medico_hospital('4-0071-0076','Hospital Max peralta');
+EXEC p_conectar_medico_especialidad('4-0071-0076','Alergologo'); 
 -- parte 3
 -- drop procedure aux_lista_especialidades;
 
