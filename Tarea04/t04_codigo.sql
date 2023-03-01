@@ -104,12 +104,11 @@ INSERT INTO t04_temporal values('2-0876-4527', 'Flor', 'Flores', 'Heredia',
  'Nutricionista, Cardiologa, Medico General', 'Hospital San Vicente de Paul');
 INSERT INTO t04_temporal values('1-9976-0442', 'Kevin', 'Moraga', 'Alajuela',
  'Cardiologo, Pediatra, Hepatologo', 'Hospital San Rafael');
- 
-Select * FROM t04_temporal;
 
 --bloque anonimo
 SET serveroutput ON;
 
+/*
 DECLARE
     v_medico_cedula  VARCHAR2(11);
     v_medico_nombre VARCHAR2(40);
@@ -131,7 +130,32 @@ BEGIN
     CLOSE cur_medicos;
 END;
 /
+*/
 
+-- parte 3
+-- drop procedure aux_lista_especialidades;
+
+CREATE OR REPLACE FUNCTION lista_especialidades (cedula VARCHAR2) 
+    RETURN VARCHAR2 IS
+    resultado VARCHAR2(200); 
+BEGIN 
+  resultado := ' ';
+  FOR item IN ( 
+    select t04_especialidad.nombre_espec from t04_medico 
+    join t04_medico_especialidad on  t04_medico_especialidad.medico_id = t04_medico.id_medico 
+    join t04_especialidad on  t04_medico_especialidad.especialidad_id = t04_especialidad.id_especialidad 
+    where t04_medico.cedula_medico = cedula 
+    ORDER BY t04_especialidad.nombre_espec ASC  
+        ) LOOP
+        resultado := resultado || item.nombre_espec || ' , ';
+        
+        END LOOP;
+    DBMS_OUTPUT.PUT_LINE (resultado); 
+    return resultado;
+END;
+
+-- parte 4
+-- MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 -- funcion; obtener el id mayor
 CREATE OR REPLACE FUNCTION calcular_siguiente_id_medico
     RETURN NUMBER IS
@@ -141,6 +165,77 @@ BEGIN
     FROM t04_medico;
     
     RETURN new_id;
+END;
+/
+
+-- function medico existe
+CREATE OR REPLACE FUNCTION medico_no_existe ( new_cedula_medico VARCHAR2)
+    RETURN BOOLEAN IS
+    v_a NUMBER;
+BEGIN
+    SELECT count(cedula_medico) INTO v_a
+    FROM t04_medico 
+    WHERE cedula_medico = new_cedula_medico;
+    
+    IF v_a > 0 THEN 
+        RETURN FALSE;
+    ELSE 
+        RETURN TRUE;
+    END IF;
+END;
+/
+
+-- insertar nuevo medico
+CREATE OR REPLACE PROCEDURE nuevo_medico(
+    new_cedula_medico VARCHAR2,
+    new_nombre_medico VARCHAR2,
+    new_primer_apellido VARCHAR2,
+    new_direccion VARCHAR2
+)
+AS
+    new_id_medico NUMBER;
+    bandera BOOLEAN;
+BEGIN
+    new_id_medico := calcular_siguiente_id_medico();
+    bandera := medico_no_existe(new_cedula_medico);
+    IF ( bandera ) THEN 
+        INSERT INTO t04_medico values(new_id_medico, new_cedula_medico, new_nombre_medico, new_primer_apellido, new_direccion);
+    END IF;
+END;
+/
+
+CREATE OR REPLACE FUNCTION espec_no_existe (v_nombre_espec VARCHAR2)
+   RETURN BOOLEAN IS
+    v_a NUMBER;
+BEGIN
+    SELECT count(id_especialidad) INTO v_a
+    FROM t04_especialidad 
+    WHERE nombre_espec = v_nombre_espec;
+    
+    IF v_a > 0 THEN 
+        RETURN FALSE;
+    ELSE 
+        RETURN TRUE;
+    END IF;
+END;
+/
+    
+
+CREATE OR REPLACE PROCEDURE nueva_especialidad(
+    new_nombre_espec VARCHAR2
+)
+AS
+    new_id_espc NUMBER;
+    bandera BOOLEAN;
+BEGIN
+    SELECT (max(t04_especialidad.id_especialidad) + 1) INTO new_id_espc
+    FROM t04_especialidad;
+    
+    bandera := espec_no_existe(new_nombre_espec);
+    
+    IF ( bandera ) THEN 
+        INSERT INTO t04_especialidad VALUES (new_id_espc, new_nombre_espec);
+    END IF;
 END;
 /
 
@@ -175,6 +270,7 @@ BEGIN
     WHERE t04_hospital.nombre_hospital = p_nombre_hospital;
     
     DBMS_OUTPUT.PUT_LINE(v_id_medico || ' ,' || v_id_hospital);
+    INSERT INTO t04_medico_hospital values(v_id_medico, v_id_hospital);
 END;
 /
 
@@ -195,35 +291,48 @@ BEGIN
     WHERE t04_especialidad.nombre_espec = p_nombre_espec;
     
     DBMS_OUTPUT.PUT_LINE(v_id_medico || ' ,' || v_id_espec);
+    INSERT INTO t04_medico_especialidad values(v_id_medico, v_id_espec);
 END;
 /
-
-Select calcular_siguiente_id_medico() FROM dual;
-Select existe_hospital('Hospital Max peralta') FROM dual;
-Select existe_hospital('Hospital San Patricio') FROM dual;
-Exec p_conectar_medico_hospital('4-0071-0076','Hospital Max peralta');
-EXEC p_conectar_medico_especialidad('4-0071-0076','Alergologo'); 
--- parte 3
--- drop procedure aux_lista_especialidades;
-
-CREATE OR REPLACE FUNCTION lista_especialidades (cedula VARCHAR2) 
-    RETURN VARCHAR2 IS
-    resultado VARCHAR2(200); 
+-- MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+CREATE OR REPLACE PROCEDURE procesa_medico_hospital_especialidad AS 
+v_medico_cedula VARCHAR2(15);  
+v_lista_especialidades VARCHAR2(100); 
+v_especialidad VARCHAR2(40); 
+v_hospital VARCHAR2(40);
+v_hospital_id number; 
+ 
 BEGIN 
-  resultado := ' ';
-  FOR item IN ( 
-    select t04_especialidad.nombre_espec from t04_medico 
-    join t04_medico_especialidad on  t04_medico_especialidad.medico_id = t04_medico.id_medico 
-    join t04_especialidad on  t04_medico_especialidad.especialidad_id = t04_especialidad.id_especialidad 
-    where t04_medico.cedula_medico = cedula 
-    ORDER BY t04_especialidad.nombre_espec ASC  
-        ) LOOP
-        resultado := resultado || item.nombre_espec || ' , ';
-        
-        END LOOP;
-    DBMS_OUTPUT.PUT_LINE (resultado); 
-    return resultado;
+FOR item IN (SELECT * FROM t04_temporal) LOOP 
+    v_lista_especialidades := TRIM(item.especialidades); 
+    IF LENGTH(v_lista_especialidades) > 0 THEN 
+        LOOP 
+            IF INSTR(v_lista_especialidades, ',') > 0 THEN 
+            v_especialidad := SUBSTR(v_lista_especialidades, 1, INSTR(v_lista_especialidades, ',') -1); 
+            v_lista_especialidades := TRIM(SUBSTR(v_lista_especialidades, INSTR(v_lista_especialidades, ',') +1)); 
+            v_hospital_id := v_hospital_id +1; 
+            ELSE 
+                v_especialidad := v_lista_especialidades; 
+                v_lista_especialidades := ''; 
+            END IF; 
+            DBMS_OUTPUT.PUT_LINE (item.medico_nombre); 
+            DBMS_OUTPUT.PUT_LINE (v_hospital_id  || v_especialidad);
+            -- insertar medico
+            SELECT medico_cedula INTO v_medico_cedula FROM t04_temporal WHERE medico_nombre = item.medico_nombre;
+            nuevo_medico(v_medico_cedula, item.medico_nombre, item.medico_apellido, item.medico_provincia);
+            -- insertar especialidad
+            nueva_especialidad(v_especialidad);
+            -- conectar medico con especialidad
+            p_conectar_medico_especialidad(v_medico_cedula , v_especialidad);
+            -- conectar medico con el hospital
+            SELECT hospitales INTO v_hospital FROM t04_temporal WHERE medico_nombre = item.medico_nombre;
+            DBMS_OUTPUT.PUT_LINE (v_hospital);
+            p_conectar_medico_hospital(v_medico_cedula, v_hospital);
+        EXIT WHEN v_lista_especialidades is NULL; 
+        END LOOP; 
+    END IF; 
+END LOOP;    
 END;
 
-SELECT lista_especialidades('4-0071-0076') FROM dual;
+EXEC procesa_medico_hospital_especialidad();
 
