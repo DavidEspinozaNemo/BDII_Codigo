@@ -106,3 +106,42 @@ INSERT INTO t04_temporal values('1-9976-0442', 'Kevin', 'Moraga', 'Alajuela',
  'Cardiologo, Pediatra, Hepatologo', 'Hospital San Rafael');
  
 Select * FROM t04_temporal;
+
+--bloque anonimo
+SET serveroutput ON;
+
+DECLARE
+    v_medico_cedula  VARCHAR2(11);
+    v_medico_nombre VARCHAR2(40);
+    v_medico_apellido VARCHAR2(40);
+    v_medico_provincia VARCHAR2(15);
+    CURSOR cur_medicos IS
+        SELECT medico_cedula, medico_nombre, medico_apellido, medico_provincia
+        FROM t04_temporal;
+BEGIN
+    OPEN cur_medicos;
+    LOOP --ciclo
+        FETCH cur_medicos
+            INTO v_medico_cedula, v_medico_nombre, v_medico_apellido, v_medico_provincia;
+        
+        EXIT WHEN cur_medicos%NOTFOUND; -- condicion de salida
+        DBMS_OUTPUT.PUT_LINE(v_medico_cedula || ' ,' || v_medico_nombre || ' ,' || v_medico_apellido || ' ,' || v_medico_provincia);
+    
+    END LOOP;
+    CLOSE cur_medicos;
+END;
+/
+
+-- funcion; obtener el id mayor
+CREATE OR REPLACE FUNCTION calcular_siguiente_id_medico
+    RETURN NUMBER IS
+    new_id NUMBER;
+BEGIN
+    SELECT (max(t04_medico.id_medico) + 1) INTO new_id
+    FROM t04_medico;
+    
+    RETURN new_id;
+END;
+/
+
+Select calcular_siguiente_id_medico() FROM dual;
