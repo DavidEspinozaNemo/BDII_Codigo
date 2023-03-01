@@ -145,3 +145,28 @@ END;
 /
 
 Select calcular_siguiente_id_medico() FROM dual;
+
+-- parte 3
+-- drop procedure aux_lista_especialidades;
+
+CREATE OR REPLACE FUNCTION lista_especialidades (cedula VARCHAR2) 
+    RETURN VARCHAR2 IS
+    resultado VARCHAR2(200); 
+BEGIN 
+  resultado := ' ';
+  FOR item IN ( 
+    select t04_especialidad.nombre_espec from t04_medico 
+    join t04_medico_especialidad on  t04_medico_especialidad.medico_id = t04_medico.id_medico 
+    join t04_especialidad on  t04_medico_especialidad.especialidad_id = t04_especialidad.id_especialidad 
+    where t04_medico.cedula_medico = cedula 
+    ORDER BY t04_especialidad.nombre_espec ASC  
+        ) LOOP
+        resultado := resultado || item.nombre_espec || ' , ';
+        
+        END LOOP;
+    DBMS_OUTPUT.PUT_LINE (resultado); 
+    return resultado;
+END;
+
+SELECT lista_especialidades('4-0071-0076') FROM dual;
+
